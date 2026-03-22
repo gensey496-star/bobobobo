@@ -484,10 +484,17 @@ def get_local_date():
 def is_allowed_thread(message: Message) -> bool:
     if ALLOWED_THREAD_ID is None:
         return True
-    if message.is_topic_message and message.message_thread_id != ALLOWED_THREAD_ID:
-        return False
+    # Личные сообщения — без привязки к ветке (админка и т.д.)
+    if message.chat.type == ChatType.PRIVATE:
+        return True
+    # Супергруппа с темами: только указанная ветка
+    if getattr(message.chat, "is_forum", False):
+        return (
+            message.is_topic_message
+            and message.message_thread_id == ALLOWED_THREAD_ID
+        )
+    # Обычная группа без тем — поведение как «везде»
     return True
-
 
 # ======================
 # ✅ Хелперы выходного
